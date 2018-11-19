@@ -9,21 +9,86 @@ import numpy as np
 import scipy.linalg as linalg
 from numpy.linalg import svd as svd
 import math
+import os
+import subprocess
 
 def main(argv):
-    print("main")
+    haveSolutions = False;
     #N = argv[0]
     print(argv)
 
-    N = 67591
-    L = 30
+    N = 145968946107052219367611
+    L = 500
     F = make_prime_list(L)
-    print(F)
     r_list, M = r_generator(F, N, L)
-    print(r_list)
-    print(M)
-    x = nullspace(M)
-    print(x)
+    f = open("input.txt", "w")
+    f.write("%d %d" % (L, len(F)))
+    
+    if not haveSolutions:
+        for i in range(L):
+            f.write("\n")
+            for j in range(len(F)):
+                f.write("%d" % M[i,j])
+                if j != len(F):
+                    f.write(" ")
+                
+        f.close
+    else:
+        with open("output.txt") as file:
+            
+            counter = 1
+            for line in file.readlines():
+                factor_dict = {}
+                if counter == 1:
+                    counter += 1
+                    continue
+                row_s = line.strip().split(" ")
+                r_product = 1
+                factor_product = 1
+                factor_dict= {}
+                for i in range(len(row_s)): 
+                    if row_s[i] == '1':
+                        r_product *= r_list[i][0]
+                        r_product = r_product % N
+                        for j in r_list[i][1]:
+                            factor_product *= j
+                            if j not in factor_dict:
+                                factor_dict[j] = 1
+                            else:
+                                factor_dict[j] = factor_dict[j] + 1
+                
+                for k in factor_dict:
+                    if factor_dict[k] % 2 != 0:
+                        print("ERROR!!!!")
+                    factor_product = factor_product * k**(factor_dict[k]/2)
+                    factor_product = factor_product % N
+                v = factor_product - r_product
+                v = math.floor(v)
+                v = v%N
+                if math.gcd(v, N) != 1:
+                    p = math.gcd(v,N)
+                    q = math.floor(N/p)
+                    print(p,q)
+                    break
+                        
+                        
+#    f_out = open("output.txt", "w")
+#    f_out.close
+    #if os.path.isfile("C:/Users/Olle/Documents/GitHub/kryptographyprojects/GaussBin.exe"):
+     #   print("is a file!")
+        
+    #args = "C:/Users/Olle/Documents/GitHub/kryptographyprojects/GaussBin.exe input.txt output.txt"
+    #os.system("C:/Users/Olle/Documents/GitHub/kryptographyprojects/GaussBin.exe input.txt output.txt")
+    #subprocess.run(args)
+    
+    
+#    FNULL = open(os.devnull, 'w')    #use this if you want to suppress output to stdout from the subprocess
+#    args = "GaussBin.exe " + "input.txt " + "input.txt"
+#    subprocess.call(args, stdout=FNULL, stderr=FNULL, shell=False)
+#    
+#    #os.system("GaussBin.exe input.txt output.txt")
+        
+    
 
 
 def make_prime_list(L):
@@ -52,8 +117,8 @@ def r_generator(F, N, L):
     
     M = np.zeros((L,len(F)),dtype='int')
     created_rows = 0
-    for j in range(1, L):
-        for k in range(1, L+30):
+    for j in range(1, N):
+        for k in range(1, L + math.floor(L/2)):
             r = (math.floor(math.sqrt(k*N)) + j)
             r_squared = r**2 % N
             factors = []
@@ -79,22 +144,14 @@ def r_generator(F, N, L):
                     M[created_rows, :] = row
                     tuples.append((r, factors))
                     created_rows += 1
-                    print(created_rows)
+                    print("Added row", created_rows)
                 if created_rows == L:
                     return tuples, M
 
     if len(tuples) != L:
-        print("WARNING: The r_generator needs improvement!!!")
+        print("WARNING: The r_generator needs improvement!!!", len(tuples))
+        
 
-
-
-def nullspace(A, atol=1e-13, rtol=0):
-    A = np.atleast_2d(A)
-    u, s, vh = svd(A)
-    tol = max(atol, rtol * s[0])
-    nnz = (s >= tol).sum()
-    ns = vh[nnz:].conj().T
-    return ns
 
 if __name__ == "__main__": main(sys.argv[1:])
 
