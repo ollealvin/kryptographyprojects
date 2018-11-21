@@ -9,22 +9,21 @@ import numpy as np
 import math
 import time
 
-def main(argv):
-    #N = argv[0]
-    print(argv)
+def main():
 
     N = 145968946107052219367611
-    #N = 10967535067
-    #N = 16637
-    #N = 3205837387 # 46819 · 68473
-    #N = 392742364277 #this number does not work.
-    L = 500
-    num_primes = L-10
-    F = make_prime_list(num_primes)
-    r_list, M = r_generator(F, N, L)
-    f = open("input.txt", "w")
-    f.write("%d %d" % (L, len(F)))
     
+    L = 500                             #500 works well for large numbers. 
+    num_primes = L-10                   #We want a factor base smaller than L.
+    
+    F = make_prime_list(num_primes)     #Make the factor base.
+    
+    r_list, M = r_generator(F, N, L)    #Generate numbers, for which the 
+                                        #squares are factored by our factor 
+                                        #base.
+    
+    f = open("input.txt", "w")          #Write the binary matrix to a file.
+    f.write("%d %d" % (L, len(F)))
     for i in range(L):
         f.write("\n")
         for j in range(len(F)):
@@ -33,18 +32,18 @@ def main(argv):
                 f.write(" ")
                 
     f.close()
-    print("pause");
-    programPause = input("Run GaussBin and ress the <ENTER> key to continue...")
-    print("unpause")
+    
+    #Prompt the user to run GaussBin.exe
+    input("Run GaussBin and ress the <ENTER> key to continue...")
     
     #Check solutions
     with open("output.txt") as file:
         
-        counter = 1
+        skipped_first_row = False
         for line in file.readlines():
             factor_dict = {}
-            if counter == 1:
-                counter += 1
+            if not skipped_first_row:
+                skipped_first_row = True
                 continue
             row_s = line.strip().split(" ")
             r_product = 1
@@ -55,29 +54,22 @@ def main(argv):
                     r_product *= r_list[i][0]
                     r_product = r_product % N
                     for j in r_list[i][1]:
-                        #factor_product *= j
                         if j not in factor_dict:
                             factor_dict[j] = 1
                         else:
                             factor_dict[j] = factor_dict[j] + 1
             
             for k in factor_dict:
-                if factor_dict[k] % 2 != 0:
-                    print("ERROR!!!!")
                 factor_product = factor_product * k**(factor_dict[k]>>1)
-                #factor_product = factor_product % N
-            if r_product**2 %N != factor_product**2 %N:
-                print("wrong!")
+                
             v = factor_product - r_product
-            v = math.floor(v)
+            v = int(v)
             v = v%N
-            print(".",end='')
             if math.gcd(v, N) != 1 and math.gcd(v, N) != N:
                 p = math.gcd(v,N)
                 q = math.floor(N/p)
-                print(p,q)
+                print("Found solution: %d = %d * %d" %(N, p, q))
                 return
-                break
         print("No solutions")
     
 
@@ -105,8 +97,9 @@ def r_generator(F, N, L):
     """
     Generates numbers r of the given form, until L numbers can be returned
     that factor over F.
-    Returns a list of  L tuples, the first item in the tuple being r and the second
-    being the prime factors of r^2 mod N.
+    Returns a list of  L tuples, the first item in the tuple being r and the 
+    second being the prime factors of r^2 mod N. 
+    Also constructs and returns the binary matrix.
     """
     start = time.clock()
     tuples = []
@@ -146,21 +139,20 @@ def r_generator(F, N, L):
                     M[created_rows, :] = row
                     tuples.append((r, factors))
                     created_rows += 1
-                    print("Added row", created_rows, r,k,j)
                 if created_rows == L:
                     stop = time.clock()
-                    print("Finished computing numbers factored by our factor base, tested %d numbers, time: %f" % (numbers_tested, stop-start) )
+                    print("Finished computing numbers factored by our " \
+                          "factor base, tested %d numbers, time: %f" 
+                          % (numbers_tested, stop-start) )
                     return tuples, M
             
         sum += 1
         
     if sum == MAX_SUM:
         print("Tried %d numbers but did not find enough!" %(MAX_SUM))
-    if len(tuples) != L:
-        print("WARNING: The r_generator needs improvement!!!", len(tuples))
         
 
-if __name__ == "__main__": main(sys.argv[1:])
+if __name__ == "__main__": main()
 
 
 
