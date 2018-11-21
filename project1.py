@@ -6,24 +6,21 @@ Created on Wed Nov 14 09:50:32 2018
 """
 import sys
 import numpy as np
-import scipy.linalg as linalg
-from numpy.linalg import svd as svd
 import math
-import os
-import subprocess
 import time
 
 def main(argv):
-    haveSolutions =True;
     #N = argv[0]
     print(argv)
 
-    #N = 145968946107052219367611
+    N = 145968946107052219367611
     #N = 10967535067
-   # N = 16637
-    N = 392742364277 #this number does not work.
-    L = 1000
-    F = make_prime_list(L)
+    #N = 16637
+    #N = 3205837387 # 46819 · 68473
+    #N = 392742364277 #this number does not work.
+    L = 500
+    num_primes = L-10
+    F = make_prime_list(num_primes)
     r_list, M = r_generator(F, N, L)
     f = open("input.txt", "w")
     f.write("%d %d" % (L, len(F)))
@@ -37,9 +34,10 @@ def main(argv):
                 
     f.close()
     print("pause");
-    programPause = input("Run gaussbin and ress the <ENTER> key to continue...")
+    programPause = input("Run GaussBin and ress the <ENTER> key to continue...")
     print("unpause")
     
+    #Check solutions
     with open("output.txt") as file:
         
         counter = 1
@@ -57,7 +55,7 @@ def main(argv):
                     r_product *= r_list[i][0]
                     r_product = r_product % N
                     for j in r_list[i][1]:
-                        factor_product *= j
+                        #factor_product *= j
                         if j not in factor_dict:
                             factor_dict[j] = 1
                         else:
@@ -67,10 +65,13 @@ def main(argv):
                 if factor_dict[k] % 2 != 0:
                     print("ERROR!!!!")
                 factor_product = factor_product * k**(factor_dict[k]>>1)
-                factor_product = factor_product % N
+                #factor_product = factor_product % N
+            if r_product**2 %N != factor_product**2 %N:
+                print("wrong!")
             v = factor_product - r_product
             v = math.floor(v)
             v = v%N
+            print(".",end='')
             if math.gcd(v, N) != 1 and math.gcd(v, N) != N:
                 p = math.gcd(v,N)
                 q = math.floor(N/p)
@@ -81,10 +82,14 @@ def main(argv):
     
 
 
-def make_prime_list(L):
+def make_prime_list(num_primes):
+    """
+    Makes a list of prime numbers with num_primes primes.
+    """
     prime_list = []
     prime_list.append(2)
-    for i in range(3,L):
+    i = 3
+    while len(prime_list) <  num_primes:
         is_prime = True
         for j in prime_list:
             if i % j == 0:
@@ -92,15 +97,16 @@ def make_prime_list(L):
 
         if is_prime:
             prime_list.append(i)
+        i += 1
 
     return prime_list
 
 def r_generator(F, N, L):
     """
-    GEenerates numbers r of the given form, until L numbers can be returned
+    Generates numbers r of the given form, until L numbers can be returned
     that factor over F.
-    Returns a list of  L tuples, the first item in the tuple being r and the second7
-    being the factors of r^2 mod N.
+    Returns a list of  L tuples, the first item in the tuple being r and the second
+    being the prime factors of r^2 mod N.
     """
     start = time.clock()
     tuples = []
@@ -113,7 +119,7 @@ def r_generator(F, N, L):
         for k in range(1,sum-1):
             j = sum-k
             r = (math.floor(math.sqrt(k*N)) + j)
-            r_squared = r**2 % N
+            r_squared = (r**2) % N
             factors = []
             numbers_tested += 1
 
